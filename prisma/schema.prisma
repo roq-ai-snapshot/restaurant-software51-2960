@@ -1,0 +1,89 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model customer {
+  id      String   @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  user_id String   @db.Uuid
+  user    user     @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  order   order[]
+  review  review[]
+}
+
+model menu {
+  id            String       @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  restaurant_id String       @db.Uuid
+  dish_name     String       @db.VarChar
+  price         Int
+  availability  Boolean
+  restaurant    restaurant   @relation(fields: [restaurant_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  order_item    order_item[]
+}
+
+model order {
+  id            String       @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  customer_id   String       @db.Uuid
+  restaurant_id String       @db.Uuid
+  waiter_id     String       @db.Uuid
+  status        String       @db.VarChar
+  order_type    String       @db.VarChar
+  total_price   Int
+  customer      customer     @relation(fields: [customer_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  restaurant    restaurant   @relation(fields: [restaurant_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  staff         staff        @relation(fields: [waiter_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  order_item    order_item[]
+}
+
+model order_item {
+  id       String @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  order_id String @db.Uuid
+  menu_id  String @db.Uuid
+  quantity Int
+  menu     menu   @relation(fields: [menu_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  order    order  @relation(fields: [order_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model restaurant {
+  id       String   @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  name     String   @db.VarChar
+  owner_id String   @db.Uuid
+  menu     menu[]
+  order    order[]
+  user     user     @relation(fields: [owner_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  review   review[]
+  staff    staff[]
+}
+
+model review {
+  id            String     @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  customer_id   String     @db.Uuid
+  restaurant_id String     @db.Uuid
+  rating        Int
+  comment       String?    @db.VarChar
+  customer      customer   @relation(fields: [customer_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  restaurant    restaurant @relation(fields: [restaurant_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model staff {
+  id            String     @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  user_id       String     @db.Uuid
+  restaurant_id String     @db.Uuid
+  role          String     @db.VarChar
+  order         order[]
+  restaurant    restaurant @relation(fields: [restaurant_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  user          user       @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model user {
+  id          String       @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  roq_user_id String       @db.VarChar
+  tenant_id   String       @db.VarChar
+  customer    customer[]
+  restaurant  restaurant[]
+  staff       staff[]
+}
